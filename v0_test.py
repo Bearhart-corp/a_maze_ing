@@ -1,5 +1,6 @@
 from enum import Enum
 import random
+import time
 
 class Dir(Enum):
     N = 0b00001
@@ -45,8 +46,8 @@ def init_maze(width: int, height: int) -> list:
 def is_visited(maze: list[list[tuple]], pos: tuple) -> bool:
     return (get_cell(maze, pos) & 16)
 
-def rm_wall(maze, cell: int, dir: Dir, pos: tuple) -> None:
-    maze[pos[0]][pos[1]] = (cell & ~dir.value)
+def rm_wall(maze, dir: Dir, pos: tuple) -> None:
+    maze[pos[0]][pos[1]] &= ~dir.value
 
 def set_visited(pos: tuple, maze: list[list[tuple]]) -> None:
     maze[pos[0]][pos[1]] |= 16
@@ -69,7 +70,7 @@ def get_cell(maze: list[list[int]], pos: tuple) -> int:
 def print_maze(maze, width: int, height: int, entry: tuple) -> None:
     t = [
         "  ",
-        "↑ ",# U
+        "  ",
         "  ",#2
         "←↓",
         "  ",#4
@@ -87,10 +88,7 @@ def print_maze(maze, width: int, height: int, entry: tuple) -> None:
     ]
     for i in range(height):
         for j in range(width):
-            if i == entry[0] and j == entry[1]:
-                print("\U0001F4A9", end=" | ")
-            else:
-                print(t[(maze[i][j]) & 15], end=" | ")
+            print(t[(maze[i][j]) & 0xf], end=" | ")
         print()
 
 def print_hexa(maze, w, h):
@@ -99,10 +97,9 @@ def print_hexa(maze, w, h):
             print(hex(maze[i][j]), end=" | ")
         print()
 
-def create_maze(maze: list[list[int]], entry: tuple, seed: int, w:int, h:int):
+def create_maze(maze: list[list[int]], cur_coor: tuple, seed: int, w:int, h:int):
     rng = random.Random(seed)
     stack = []
-    cur_coor = entry
     neig: list[Dir] = get_neighbords(cur_coor, maze, w, h)
     while len(neig) > 0:
         set_visited(cur_coor, maze)
@@ -118,19 +115,54 @@ def create_maze(maze: list[list[int]], entry: tuple, seed: int, w:int, h:int):
                     next_dir: Dir = rng.choice(neig)
                     break
         next_coor: tuple = take_dir(next_dir, cur_coor)
-        next_cell: int = get_cell(maze, next_coor)
-        rm_wall(maze, get_cell(maze, cur_coor), next_dir, cur_coor)
-        rm_wall(maze, next_cell, dir_oppo(next_dir), next_coor)
+        rm_wall(maze, next_dir, cur_coor)
+        rm_wall(maze, dir_oppo(next_dir), next_coor)
         cur_coor = next_coor
 
+def backtrack(maze: list[list[int]], cell: tuple, rng: random, w:int, h:int) -> None:
+    set_visited(cell, maze)
+    directions = get_neighbords(cell, maze, w, h)
+    rng.shuffle(directions)
+    for d in directions:
+        next_cell = take_dir(d, cell)
+        if not is_visited(maze, next_cell):
+            rm_wall(maze, d, cell)
+            rm_wall(maze, dir_oppo(d), next_cell)
+        backtrack(maze, next_cell, rng, w, h)
+        if not is_visited(maze, next_cell):
+            return
+
+
 def main():
-    seed = 11
-    w = h = 20
+    seed = 41
+    w = h = 15
+    #maze = init_maze(w, h)
+    #create_maze(maze, (0, 0), seed, w, h)
+    rng = random.Random(seed)
     maze = init_maze(w, h)
-    create_maze(maze, (0, 0), seed, w, h)
-    print_maze(maze, w, h, (0, 0))
+    if w <= 1 or h <= 1:
+        return
+    backtrack(maze, (0, 0), rng, w, h)
+    print_maze(maze, w,h, (0,0))
     print_hexa(maze, w, h)
 
 
 if __name__ == "__main__":
     main()
+
+
+#def backtrack(maze: list[list[int]], cell: tuple, rng: random, w:int, h:int) -> None: 
+    neig: list[Dir] = get_neighbords(cell, maze, w, h) 
+    if len(neig) > 0:
+        set_visited(cell, maze)
+        next_dir: Dir = rng.choice(neig)
+        next_coor: tuple = take_dir(next_dir, cell)
+        backtrack(maze, next_coor, rng, w, h)
+    else: 
+        return 
+    rm_wall(maze, next_dir, cell) 
+    rm_wall(maze, dir_oppo(next_dir), next_coor) 
+    if len(neig) > 0: set_visited(cell, maze)
+        next_dir: Dir = rng.choice(neig)
+        next_coor: tuple = take_dir(next_dir, cell)
+        backtrack(maze, next_coor, rng, w, h

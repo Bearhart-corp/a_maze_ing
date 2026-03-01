@@ -129,13 +129,37 @@ def backtrack(maze: list[list[int]], cell: tuple, rng: random, w:int, h:int) -> 
             rm_wall(maze, d, cell)
             rm_wall(maze, dir_oppo(d), next_cell)
         backtrack(maze, next_cell, rng, w, h)
-        if not is_visited(maze, next_cell):
-            return
 
+def printok(maze, w, h):
+    arr = []
+    j = 0
+    for line in maze:
+        for i in range(2):
+            arr.append([])
+            for cell in line:
+                if i == 0:
+                    arr[i + j].append("⬛")
+                    if (cell & 1):
+                        arr[i + j].append("⬛")
+                    else:
+                        arr[i + j].append("⬜")
+                if i == 1:
+                    if (cell & 8):
+                        arr[i + j].append("⬛")
+                    else:
+                        arr[i + j].append("⬜")
+                    arr[i + j].append("⬜")
+            arr[i + j].append("⬛")
+        j += 2
+    for line in arr:
+        for col in line:
+            print(col, end="")
+        print()   
+    print("⬛" * ((2 * w) + 1))      
 
 def main():
     seed = 41
-    w = h = 15
+    w = h = 20
     #maze = init_maze(w, h)
     #create_maze(maze, (0, 0), seed, w, h)
     rng = random.Random(seed)
@@ -143,26 +167,9 @@ def main():
     if w <= 1 or h <= 1:
         return
     backtrack(maze, (0, 0), rng, w, h)
-    print_maze(maze, w,h, (0,0))
     print_hexa(maze, w, h)
+    printok(maze, w, h)
 
 
 if __name__ == "__main__":
     main()
-
-
-#def backtrack(maze: list[list[int]], cell: tuple, rng: random, w:int, h:int) -> None: 
-    neig: list[Dir] = get_neighbords(cell, maze, w, h) 
-    if len(neig) > 0:
-        set_visited(cell, maze)
-        next_dir: Dir = rng.choice(neig)
-        next_coor: tuple = take_dir(next_dir, cell)
-        backtrack(maze, next_coor, rng, w, h)
-    else: 
-        return 
-    rm_wall(maze, next_dir, cell) 
-    rm_wall(maze, dir_oppo(next_dir), next_coor) 
-    if len(neig) > 0: set_visited(cell, maze)
-        next_dir: Dir = rng.choice(neig)
-        next_coor: tuple = take_dir(next_dir, cell)
-        backtrack(maze, next_coor, rng, w, h

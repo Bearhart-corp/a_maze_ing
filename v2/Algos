@@ -1,0 +1,35 @@
+from Enums import Direction
+import Cell
+
+
+class Algo:
+    def backtrack_algo(self, start: tuple[int, int] | None = None):
+        if start is None:
+            self.start = self.random_cell(predicate=Cell.is_border).get_pos()
+        self.end = self.random_cell(predicate=Cell.is_border).get_pos()
+        move_list = [self.start]
+        while move_list:
+            possible = [a for a in Direction]
+            while possible:
+                goal = self.rng.choice(possible)
+                actual_cell = self.get_cell(move_list[-1])
+                next_pos = self.add_pos(move_list[-1], goal.delta())
+                if (self.is_in_grid(next_pos)
+                        and not self.get_cell(next_pos).is_open()
+                        and not actual_cell.wall_state(goal) == 2):
+                    actual_cell.remove_wall(goal)
+                    self.get_cell(next_pos).remove_wall(goal.oppo())
+                    move_list.append(next_pos)
+                    # if not self.window.is_dead:
+                    #     self.window.print_maze(self.cells)
+                    break
+                else:
+                    possible.remove(goal)
+            if not possible:
+                move_list.pop()
+        for row in self.cells:
+            for cell in row:
+                cell.update_str_rows()
+
+    def binary_tree(self, start: tuple[int, int] | None = None):
+        pass

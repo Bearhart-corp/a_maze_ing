@@ -1,0 +1,11 @@
+wIDTH=20
+# ceciestuncom
+HEIGHT=20
+ENTRY=12,0
+
+EXIT=12,19
+OUTPUT_FILE=rbow.txt
+PERFECT=false
+
+ALGO=huntnkill
+ANIM=true
